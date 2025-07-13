@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Multiple Bundle Upload via SignalR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main>
+        <div class="container">
+            <!-- File Selection Section -->
+            <div class="section">
+                <h3>📂 Select Bundle Files</h3>
+                <input type="file" id="bundleInput" multiple accept=".bundle" 
+                       title="Select multiple .bundle files">
+                
+                <div class="file-list" id="fileList">
+                    <p style="color: #888; font-style: italic;">No files selected</p>
+                </div>
+                
+                <button style="margin-bottom: 20px;" class="upload-button" id="uploadAllButton" disabled>
+                    📤 Upload All Files
+                </button>
+                <button class="clear-button" id="clearFilesButton">
+                    🗑️ Clear All
+                </button>
+            </div>
+
+            <!-- Upload Progress Section -->
+            <div class="section">
+                <h3>📊 Upload Progress</h3>
+                
+                <div class="overall-progress">
+                    <div class="current-file" id="currentFile">Ready to upload...</div>
+                    <div class="progress">
+                        <div class="progress-bar" id="overallProgressBar"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #bbb; margin-top: 5px;" id="progressText">
+                        0 / 0 files completed
+                    </div>
+                </div>
+                
+                <div class="upload-messages" id="uploadMessages">
+                    <p style="color: #888;"><b>Server is not running</b></p>
+                </div>
+            </div>
+
+            <!-- Test Section -->
+            <div class="section">
+                <h3>🧪 Test Functions</h3>
+                <div class="test-buttons">
+                    <button class="test-button" id="testInstallButton">Start Install</button>
+                    <button class="test-button" id="stopInstallButton">Stop Install</button>
+                    <button class="test-button" id="continueInstallButton">Continue Install</button>
+                    <button class="test-button" id="getStatusButton">Get Status</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>
