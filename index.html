@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Zip Upload via SignalR</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <header>
+        <h2>📁 SignalR File & Chat App</h2>
+    </header>
+    
+    <main>
+        <div class="container">
+            <h3>MESSENGER</h3>
+            <div id="messages"></div>
+            <input type="text" id="chatbox" placeholder="Type your message and enter...">
+
+            <h3>ZIP UPLOADER</h3>
+            <input type="file" id="zipInput" >
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div id="uploadMessages"></div>
+
+            <button id = "readSystemInfo">Read System Info</button>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="./main.js"></script>
+</body>
+
+</html>

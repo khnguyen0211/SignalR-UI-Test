@@ -1,0 +1,143 @@
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: inherit;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1c1f26, #3c3f48);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            padding: 5px;
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            color: white;
+        }
+
+        input[type="file"],
+        input[type="text"] {
+            margin-top: 15px;
+            padding: 8px;
+            width: 100%;
+            border: 1px solid #888;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #222;
+            color: #fff;
+        }
+
+        .progress {
+            margin-top: 20px;
+            height: 20px;
+            width: 100%;
+            background: #555;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #4caf50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #uploadMessages {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #8bc34a;
+            text-align: left;
+        }
+
+        #chatbox {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        #messages {
+            display: flex;
+            flex-direction: column-reverse;
+            font-size: 14px;
+            color: #ddd;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .section-title {
+            margin-top: 25px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .message.server {
+            justify-content: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message .icon {
+            font-size: 18px;
+            margin: 0 8px;
+        }
+
+        .message .bubble {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+
+        .message.server .bubble {
+            background-color: #546e7a;
+            border-top-left-radius: 0;
+        }
+
+        .message.user .bubble {
+            background-color: #2e7d32;
+            border-top-right-radius: 0;
+        }
