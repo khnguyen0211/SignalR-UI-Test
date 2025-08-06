@@ -1,2 +1,0 @@
-# SignalR-UI-Test
-Nothing

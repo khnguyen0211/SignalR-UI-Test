@@ -23,12 +23,28 @@
                 <button style="margin-bottom: 20px;" class="upload-button" id="uploadAllButton" disabled>
                     📤 Upload All Files
                 </button>
-                <button class="clear-button" id="clearFilesButton">
-                    🗑️ Clear All
-                </button>
             </div>
 
-            <!-- Upload Progress Section -->
+            <!-- NEW: Cancel App Section -->
+            <div class="section">
+                <div class="session-status">
+                    <h3 style="margin-top: 0; color: #4caf50;">Current Session Status</h3>
+                    <div id="sessionStatusContent">
+                        <div class="no-session">No active session. Start an installation to see apps here.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🧪 Installation Control</h3>
+                <div class="test-buttons">
+                    <button class="test-button" id="testInstallButton">Start Install</button>
+                    <button class="test-button" id="stopInstallButton">Stop Install</button>
+                    <button class="test-button" id="continueInstallButton">Continue Install</button>
+                    <button class="test-button" id="getStatusButton">Get Status</button>
+                </div>
+            </div>
+<!-- Upload Progress Section -->
             <div class="section">
                 <h3>📊 Upload Progress</h3>
                 
@@ -44,17 +60,6 @@
                 
                 <div class="upload-messages" id="uploadMessages">
                     <p style="color: #888;"><b>Server is not running</b></p>
-                </div>
-            </div>
-
-            <!-- Test Section -->
-            <div class="section">
-                <h3>🧪 Test Functions</h3>
-                <div class="test-buttons">
-                    <button class="test-button" id="testInstallButton">Start Install</button>
-                    <button class="test-button" id="stopInstallButton">Stop Install</button>
-                    <button class="test-button" id="continueInstallButton">Continue Install</button>
-                    <button class="test-button" id="getStatusButton">Get Status</button>
                 </div>
             </div>
         </div>

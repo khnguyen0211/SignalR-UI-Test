@@ -6,14 +6,17 @@ const connection = new signalR.HubConnectionBuilder()
 const uploadMessages = document.getElementById("uploadMessages");
 const fileList = document.getElementById("fileList");
 const uploadAllButton = document.getElementById("uploadAllButton");
-const clearFilesButton = document.getElementById("clearFilesButton");
 const overallProgressBar = document.getElementById("overallProgressBar");
 const currentFileDiv = document.getElementById("currentFile");
 const progressText = document.getElementById("progressText");
+const sessionStatusContent = document.getElementById("sessionStatusContent");
+const cancelAppIdInput = document.getElementById("cancelAppIdInput");
+const cancelAppButton = document.getElementById("cancelAppButton");
 
 let selectedFiles = [];
 let ENCRYPTION_KEY = null;
 let isUploading = false;
+let currentSessionStatus = null;
 
 // Encryption functions
 async function importServerKey(key) {
@@ -57,7 +60,59 @@ function addMessage(message, type = 'info') {
     uploadMessages.scrollTop = uploadMessages.scrollHeight;
 }
 
-// File management
+// NEW: Session status display functions
+function updateSessionStatusDisplay(sessionData) {
+    currentSessionStatus = sessionData;
+
+    if (!sessionData || !sessionData.ItemList || sessionData.ItemList.length === 0) {
+        sessionStatusContent.innerHTML = '<div class="no-session">No active session. Start an installation to see apps here.</div>';
+        return;
+    }
+
+    const itemsHtml = sessionData.ItemList.map(item => {
+        const status = item.Status.toLowerCase();
+        const canCancel = status === 'pending';
+        const progress = item.InstallProgress || 0;
+
+        return `
+                    <div class="app-item ${status}">
+                        <div class="app-info">
+                            <div class="app-name">${item.Id} v${item.Version}</div>
+                            <div class="app-details">
+                                Progress: ${progress}% | Status: ${item.Status}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="app-status status-${status}">${item.Status}</span>
+                            ${canCancel ? `<button class="cancel-button" onclick="cancelAppById('${item.Id}', '${item.Version}')">Cancel</button>` : ''}
+                        </div>
+                    </div>
+                `;
+    }).join('');
+
+    sessionStatusContent.innerHTML = `
+                <div style="margin-bottom: 15px; font-size: 14px; color: #bbb;">
+                    Session: ${sessionData.SessionStatus} | 
+                    Total: ${sessionData.TotalItems} | 
+                    Completed: ${sessionData.CompletedItems} | 
+                    Failed: ${sessionData.FailedItems} | 
+                    Pending: ${sessionData.PendingItems}
+                </div>
+                ${itemsHtml}
+            `;
+}
+
+// NEW: Cancel app functions
+async function cancelAppById(appId, version) {
+    try {
+        addMessage(`🚫 Attempting to cancel app: ${appId}`, 'info');
+        await connection.invoke("ModifyInstallationSession", "cancel", { id: appId, version: version },);
+    } catch (error) {
+        addMessage(`❌ Failed to cancel ${appId}: ${error.message}`, 'error');
+    }
+}
+
+// File management functions
 function updateFileList() {
     if (selectedFiles.length === 0) {
         fileList.innerHTML = '<p style="color: #888; font-style: italic;">No files selected</p>';
@@ -95,22 +150,20 @@ function resetProgress() {
     progressText.textContent = '0 / 0 files completed';
 }
 
-// Upload functions
+// Upload functions (existing code)
 async function uploadSingleFile(file, fileIndex, totalFiles) {
     try {
         currentFileDiv.textContent = `Uploading: ${file.name}`;
         addMessage(`Starting upload: ${file.name}`);
 
-        // Calculate checksum
         const arrayBuffer = await file.arrayBuffer();
         const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-        const chunkSize = 100 * 1024; // 100 KB
+        const chunkSize = 100 * 1024;
         const totalChunks = Math.ceil(file.size / chunkSize);
 
-        // Start upload
         await connection.invoke("StartUpload", {
             fileName: file.name,
             fileSize: file.size,
@@ -118,26 +171,21 @@ async function uploadSingleFile(file, fileIndex, totalFiles) {
             expectedChecksum: hashHex
         });
 
-        // Upload chunks
         for (let i = 0; i < totalChunks; i++) {
             const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
             const buffer = await chunk.arrayBuffer();
             const encryptedChunk = await encryptChunk(buffer, ENCRYPTION_KEY);
-
             const base64Chunk = btoa(String.fromCharCode(...new Uint8Array(encryptedChunk)));
             await connection.invoke("UploadChunk", base64Chunk, i);
 
-            // Update progress
             const fileProgress = ((i + 1) / totalChunks);
             const overallProgress = ((fileIndex + fileProgress) / totalFiles) * 100;
             overallProgressBar.style.width = overallProgress.toFixed(1) + "%";
         }
 
-        // End upload
         await connection.invoke("EndUpload");
         addMessage(`✅ Upload completed: ${file.name}`, 'success');
 
-        // Update overall progress
         const overallProgress = ((fileIndex + 1) / totalFiles) * 100;
         overallProgressBar.style.width = overallProgress.toFixed(1) + "%";
         progressText.textContent = `${fileIndex + 1} / ${totalFiles} files completed`;
@@ -159,14 +207,12 @@ async function uploadAllFiles() {
         addMessage(`🚀 Starting upload of ${selectedFiles.length} files`);
 
         for (let i = 0; i < selectedFiles.length; i++) {
-            console.log(selectedFiles[i].name)
             await uploadSingleFile(selectedFiles[i], i, selectedFiles.length);
         }
 
         addMessage(`🎉 All files uploaded successfully!`, 'success');
         currentFileDiv.textContent = 'All uploads completed!';
 
-        // Clear files after successful upload
         setTimeout(() => {
             clearAllFiles();
         }, 2000);
@@ -190,7 +236,6 @@ document.getElementById("bundleInput").addEventListener("change", (e) => {
         addMessage(`⚠️ Only .bundle files are allowed. ${files.length - bundleFiles.length} files ignored.`, 'error');
     }
 
-    // Add new files to selection (avoid duplicates)
     bundleFiles.forEach(file => {
         if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
             selectedFiles.push(file);
@@ -198,32 +243,19 @@ document.getElementById("bundleInput").addEventListener("change", (e) => {
     });
 
     updateFileList();
-    e.target.value = ''; // Reset input
+    e.target.value = '';
 });
 
 uploadAllButton.addEventListener("click", uploadAllFiles);
-clearFilesButton.addEventListener("click", clearAllFiles);
-
 // Test buttons
 document.getElementById("testInstallButton").addEventListener("click", () => {
     const applications = [
-        // {
-        //     id: "python_0.0.2",
-        //     version: "3.11",
-        // },
-        // {
-        //     id: "blender_0.0.1",
-        //     version: "4.5.0",
-        // },
-        // {
-        //     id: "python_0.0.2",
-        //     version: "3.13",
-        // },
-        {
-            id: "pycharm_community_0.0.1",
-            version: "2025.1.3.1",
-        }
-    ]
+        { id: "blender", version: "4.5.0" },
+        { id: "r", version: "4.5.1" },
+        { id: "pandas", version: "2.3.1" },
+        { id: "pycharm", version: "2025.1.3.1" },
+        { id: "github_desktop", version: "3.5.2" },
+    ];
     connection.invoke("Install", applications).catch(err => {
         addMessage(`Install error: ${err}`, 'error');
     });
@@ -231,12 +263,13 @@ document.getElementById("testInstallButton").addEventListener("click", () => {
 
 document.getElementById("stopInstallButton").addEventListener("click", () => {
     connection.invoke("ControlInstall", "stop").catch(err => {
-        addMessage(`Get Status error: ${err}`, 'error');
+        addMessage(`Stop error: ${err}`, 'error');
     });
 });
+
 document.getElementById("continueInstallButton").addEventListener("click", () => {
     connection.invoke("ControlInstall", "continue").catch(err => {
-        addMessage(`Get Status error: ${err}`, 'error');
+        addMessage(`Continue error: ${err}`, 'error');
     });
 });
 
@@ -246,9 +279,6 @@ document.getElementById("getStatusButton").addEventListener("click", () => {
     });
 });
 
-connection.on("ReportSessionStatus", (status) => {
-    console.log(status)
-})
 // SignalR connection and event handlers
 connection.start().then(() => {
     uploadMessages.innerHTML = '';
@@ -268,7 +298,25 @@ connection.on("SetEncryptionKey", (key) => {
 });
 
 connection.on("InstallCompleted", (msg) => {
-    console.log(msg)
+    console.log("Install progress:", msg);
+    // Auto-refresh status when install progress updates
+    setTimeout(() => {
+        connection.invoke("GetSessionStatus").catch(err => {
+            console.error("Failed to refresh status:", err);
+        });
+    }, 500);
+});
+
+// NEW: Handle session status updates
+connection.on("ReportSessionStatus", (statusJson) => {
+    try {
+        const status = typeof statusJson === 'string' ? JSON.parse(statusJson) : statusJson;
+        // console.log("Session status received:", status);
+        updateSessionStatusDisplay(status);
+    } catch (error) {
+        console.error("Failed to parse session status:", error);
+        addMessage("⚠️ Failed to parse session status", 'error');
+    }
 });
 
 connection.onreconnected(() => {
@@ -277,4 +325,8 @@ connection.onreconnected(() => {
 
 connection.onclose(() => {
     addMessage("🔴 Disconnected from server", 'error');
+});
+
+connection.on("ReportInstallationRemainingTime", (data) => {
+    console.log("[ReportInstallationRemainingTime]", data);
 });
