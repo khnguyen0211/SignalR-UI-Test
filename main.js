@@ -12,6 +12,7 @@ const progressText = document.getElementById("progressText");
 const sessionStatusContent = document.getElementById("sessionStatusContent");
 const cancelAppIdInput = document.getElementById("cancelAppIdInput");
 const cancelAppButton = document.getElementById("cancelAppButton");
+const viewLogsButton = document.getElementById("viewLogs");
 
 let selectedFiles = [];
 let ENCRYPTION_KEY = null;
@@ -106,7 +107,9 @@ function updateSessionStatusDisplay(sessionData) {
 async function cancelAppById(appId, version) {
     try {
         addMessage(`🚫 Attempting to cancel app: ${appId}`, 'info');
-        await connection.invoke("ModifyInstallationSession", "cancel", { id: appId, version: version },);
+
+        await connection.invoke("ModifyInstallationSession", "cancel", { id: appId, version: version });
+        
     } catch (error) {
         addMessage(`❌ Failed to cancel ${appId}: ${error.message}`, 'error');
     }
@@ -255,6 +258,7 @@ document.getElementById("testInstallButton").addEventListener("click", () => {
         { id: "pandas", version: "2.3.1" },
         { id: "pycharm", version: "2025.1.3.1" },
         { id: "github_desktop", version: "3.5.2" },
+        { id: "pytorch", version: "2.7.1+cpu" },
     ];
     connection.invoke("Install", applications).catch(err => {
         addMessage(`Install error: ${err}`, 'error');
@@ -329,4 +333,14 @@ connection.onclose(() => {
 
 connection.on("ReportInstallationRemainingTime", (data) => {
     console.log("[ReportInstallationRemainingTime]", data);
+});
+
+document.getElementById("viewLogs").addEventListener("click", (e) => {
+    connection.invoke("GetProgressStatusList").catch(err => {
+        addMessage(`View logs error: ${err}`, 'error');
+    })
+})
+
+connection.on("ProgressStatusList", (data) => {
+    console.log("[ProgressStatusList]", data);
 });
